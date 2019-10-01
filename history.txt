@@ -1,0 +1,9 @@
+anagram blue
+anagra 123
+anagram blue
+anagram bartholemew
+anagram aple
+anagra aple
+multigram -l 3 charliejgunn
+multigram -l 2 charliejgunn
+multigram -l 2 charliegunn

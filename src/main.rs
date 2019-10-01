@@ -2,6 +2,8 @@ use std::iter;
 
 use structopt::StructOpt;
 use rustyline::Editor;
+use rustyline::error::ReadlineError;
+use colored::*;
 
 use verve::Verve;
 use verve::Word;
@@ -46,7 +48,7 @@ fn execute_command(verve : &Verve, performers : &mut Performers, command : Verve
         VerveCommand::Anagram { exact, word } => {
             let anagramr = performers.anagramr.get_or_insert_with(
                 || {
-                    println!("... building anagram capabilites");
+                    println!("{}", "... building anagram capabilites".cyan().bold());
                     AnagramR::new(&verve)
                 }
             );
@@ -70,7 +72,7 @@ fn execute_command(verve : &Verve, performers : &mut Performers, command : Verve
         VerveCommand::Multigram { word , limit } => {
             let anagramr = performers.anagramr.get_or_insert_with(
                 || {
-                    println!("... building anagram capabilites");
+                    println!("{}", "... building anagram capabilites".cyan().bold());
                     AnagramR::new(&verve)
                 }
             );
@@ -100,21 +102,31 @@ fn main() {
         None => {
             //interactive mode
             let mut rl = Editor::<()>::new();
+            let _history = rl.load_history("history.txt");
             let mut status = InteractiveStatus::Continue;
             while status == InteractiveStatus::Continue {
-                let readline = rl.readline("——⟩ ");
+                let readline = rl.readline(&"——⟩ ".bold().green().to_string());
                 status = match readline {
                     Ok(line) => {
                         let input = line.as_str();
                         rl.add_history_entry(input);
-                        let command = VerveCommand::from_iter(
+                        let command_result = VerveCommand::from_iter_safe(
                             iter::once(" ").chain(input.split(" "))
                         );
-                        execute_command(&verve, &mut performers, command)
+                        match command_result {
+                            Ok(command) => execute_command(&verve, &mut performers, command),
+                            Err(err) => {
+                                println!("{}", err);
+                                InteractiveStatus::Continue
+                            }
+                        }
                     },
-                    _ => InteractiveStatus::Stop
+                    Err(ReadlineError::Interrupted) => InteractiveStatus::Stop,
+                    Err(ReadlineError::Eof) => InteractiveStatus::Stop,
+                    _ => InteractiveStatus::Continue,
                 };
             }
+            rl.save_history("history.txt").unwrap();
         }
         Some(command) => {
             //direct command mode
