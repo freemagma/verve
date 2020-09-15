@@ -13,7 +13,11 @@ pub struct Verve {
 
 impl Verve {
     pub fn new() -> Self {
-        let file = File::open("/usr/share/dict/enable1")
+        Verve::new_from("enable1.txt")
+    }
+    pub fn new_from(dictname : &str) -> Self {
+        let file = File::open(
+            format!("/usr/share/dict/{}", dictname))
             .expect("failed to read file");
         let reader = BufReader::new(file);
 

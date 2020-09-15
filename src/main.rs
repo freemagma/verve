@@ -11,6 +11,8 @@ use verve::anagram::AnagramR;
 
 #[derive(StructOpt)]
 struct VerveCLI {
+    #[structopt(short, long)]
+    dictionary : Option<String>,
     #[structopt(subcommand)]
     command : Option<VerveCommand>,
 }
@@ -68,6 +70,7 @@ fn execute_command(verve : &Verve, performers : &mut Performers, command : Verve
             );
 
             println!("{:?}", out_vec);
+            println!("{} anagrams found", out_vec.len());
         }
         VerveCommand::Multigram { word , limit } => {
             let anagramr = performers.anagramr.get_or_insert_with(
@@ -86,6 +89,7 @@ fn execute_command(verve : &Verve, performers : &mut Performers, command : Verve
                 ).collect();
 
             println!("{:?}", out_vec);
+            println!("{} multigrams found", out_vec.len());
         }
         VerveCommand::Quit => { 
             return InteractiveStatus::Stop;
@@ -96,8 +100,11 @@ fn execute_command(verve : &Verve, performers : &mut Performers, command : Verve
 
 fn main() {
     let cli = VerveCLI::from_args();
-    let verve = Verve::new();
     let mut performers : Performers = Default::default();
+    let verve = match cli.dictionary {
+        None => Verve::new(),
+        Some(dict_name) => Verve::new_from(&dict_name)
+    };
     match cli.command {
         None => {
             //interactive mode
